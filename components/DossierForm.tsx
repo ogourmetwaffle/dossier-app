@@ -75,24 +75,7 @@ export default function DossierForm() {
             continue
           }
 
-          // Insert metadata client-side (RLS removed)
-          try {
-            const { error: metaError } = await supabase.from('documents').insert({
-              dossier_id: dossierId,
-              nom_fichier: f.name,
-              chemin_storage: path,
-              type_document: f.type
-            })
-
-            if (metaError) {
-              console.error('Meta insert error', metaError)
-              alert(`Impossible d'enregistrer les métadonnées pour ${f.name}: ${metaError.message}`)
-            }
-          } catch (err) {
-            console.error('Meta insert exception', err)
-            const message = err instanceof Error ? err.message : String(err)
-            alert(`Erreur lors de l'enregistrement des métadonnées pour ${f.name}: ${message}`)
-          }
+          // metadata storage removed — no DB insert for file metadata
           } catch (err) {
             console.error('Unexpected upload error', err)
             const message = err instanceof Error ? err.message : String(err)
