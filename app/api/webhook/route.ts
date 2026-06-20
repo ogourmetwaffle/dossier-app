@@ -1,9 +1,9 @@
-import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
-
 export async function POST(req: Request) {
+  const Stripe = (await import('stripe')).default
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
+
   const sig = req.headers.get('stripe-signature') || ''
 
   const buf = await req.arrayBuffer()
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     return new Response('Webhook secret not configured', { status: 500 })
   }
 
-  let event: Stripe.Event
+  let event: unknown
 
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret)
@@ -31,10 +31,11 @@ export async function POST(req: Request) {
 
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session
-    const metadata = session.metadata || {}
-    const dossierId = metadata.dossierId || null
+  if ((event as { type?: string }).type === 'checkout.session.completed') {
+    const ev = event as { data?: { object?: { id?: string; metadata?: Record<string, string> } }; type?: string }
+    const session = ev.data?.object ?? {}
+    const metadata = session.metadata ?? {}
+    const dossierId = metadata.dossierId ?? null
 
     if (dossierId && SUPABASE_SERVICE_ROLE_KEY) {
       try {
