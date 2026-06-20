@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2022-11-15' })
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
 export async function POST(req: Request) {
   try {
@@ -33,8 +33,9 @@ export async function POST(req: Request) {
     })
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 })
-  } catch (err: any) {
-    console.error(err)
-    return new Response(JSON.stringify({ error: err.message || 'Internal error' }), { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(message)
+    return new Response(JSON.stringify({ error: message || 'Internal error' }), { status: 500 })
   }
 }

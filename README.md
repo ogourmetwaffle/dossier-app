@@ -11,9 +11,9 @@ Court guide pour lancer, configurer Stripe & Supabase, et déployer l'applicatio
 
 ---
 
-## Prérequis
+-## Prérequis
 - Node.js 18+ et npm
-- Compte Supabase (project + table `dossiers`, `documents`, bucket `documents`)
+- Compte Supabase (project + table `dossiers` et bucket `documents`)
 - Compte Stripe (mode test)
 - (Optionnel) Stripe CLI pour tester les webhooks localement
 
@@ -97,9 +97,9 @@ Ne rendez pas publiques les clés `STRIPE_SECRET_KEY` ni `SUPABASE_SERVICE_ROLE_
 ## Supabase — configuration requise
 
 - Tables: `dossiers` (voir champs utilisés dans le code: `numero_dossier`, `nom`, `prenom`, `email`, `telephone`, `whatsapp`, `adresse`, `pays_permis`, `statut`, `montant`, `paiement_effectue`, `stripe_payment_id`, `created_at`, ...)
-- Table `documents` : `dossier_id`, `nom_fichier`, `chemin_storage`, `type_document`, `created_at`.
-- Bucket Storage: `documents` (privé). Assurez-vous des règles RLS / permissions :
-  - Les uploads depuis le frontend utilisent la clé publishable (si vous souhaitez restreindre, utiliser upload via API server-side).
+- Bucket Storage: `documents` (privé). Les fichiers téléversés sont stockés dans ce bucket; aucune table `documents` n'est créée automatiquement par l'application.
+  - Assurez-vous des règles RLS / permissions selon votre modèle :
+    - Les uploads depuis le frontend utilisent la clé publishable. Pour un contrôle plus strict, implémentez un endpoint serveur pour gérer les uploads ou utilisez des URLs signées.
 
 Créer un utilisateur admin pour tester la zone `/admin` via Supabase Auth (email/password) ou depuis la console Supabase.
 

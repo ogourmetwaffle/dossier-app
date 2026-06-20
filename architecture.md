@@ -64,11 +64,7 @@ dossier-app/
   - `paiement_effectue` (boolean)
   - `stripe_payment_id` (string)
   - `created_at`, `updated_at`
-
-- Table `documents`:
-  - `id`, `dossier_id` (FK), `nom_fichier`, `chemin_storage`, `type_document`, `created_at`
-
-Bucket Supabase Storage: `documents` (privé) — contient les fichiers téléversés.
+Bucket Supabase Storage: `documents` (privé) — contient les fichiers téléversés. L'application ne crée pas de table `documents`; si vous souhaitez stocker des métadonnées de fichiers, ajoutez une table et adaptez le frontend ou le serveur en conséquence.
 
 ---
 
@@ -77,7 +73,7 @@ Bucket Supabase Storage: `documents` (privé) — contient les fichiers téléve
 1. Déposer un dossier (utilisateur)
    - L'utilisateur remplit `DossierForm` et téléverse des fichiers via `FileUpload`.
    - Frontend crée un enregistrement `dossiers` (statut `NOUVEAU`, `paiement_effectue=false`).
-   - Frontend upload chaque fichier dans le bucket `documents` puis crée l'entrée correspondante en table `documents`.
+   - Frontend upload chaque fichier dans le bucket `documents`. (Aucune insertion automatique en table `documents` par défaut.)
    - Frontend appelle `POST /api/create-checkout-session` (server) avec `numero` et `dossierId`.
    - Server crée une session Stripe Checkout et renvoie `session.url`.
    - Frontend redirige l'utilisateur vers Stripe Checkout.

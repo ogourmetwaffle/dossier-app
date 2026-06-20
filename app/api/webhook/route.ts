@@ -1,7 +1,7 @@
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2022-11-15' })
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
 export async function POST(req: Request) {
   const sig = req.headers.get('stripe-signature') || ''
@@ -19,8 +19,9 @@ export async function POST(req: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret)
-  } catch (err: any) {
-    console.error('Webhook signature verification failed.', err.message)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('Webhook signature verification failed.', message)
     return new Response('Invalid signature', { status: 400 })
   }
 
