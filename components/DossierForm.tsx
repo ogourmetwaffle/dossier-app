@@ -58,25 +58,46 @@ export default function DossierForm() {
 
       // upload files to Supabase Storage and save metadata
       for (const f of uploadedFiles) {
-        const safeName = f.name.replace(/[^a-z0-9.\-_]/gi, '')
-        const path = `${numeroDossier}/${Date.now()}_${safeName}`
+        try {
+          // sanitize and encode filename to avoid issues with spaces/special chars
+          const baseName = f.name.replace(/[^a-z0-9.\-_.]/gi, '_')
+          const path = `${numeroDossier}/${Date.now()}_${baseName}`
 
-        const { error: uploadError } = await supabase.storage.from('documents').upload(path, f)
-        if (uploadError) {
-          console.error('Upload error', uploadError)
-          // continue to next file but notify
-          alert('Erreur lors de l\'upload du fichier: ' + f.name)
-          continue
-        }
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('documents')
+            .upload(path, f, { contentType: f.type, upsert: false })
 
-        const { error: metaError } = await supabase.from('documents').insert({
-          dossier_id: dossierId,
-          nom_fichier: f.name,
-          chemin_storage: path,
-          type_document: f.type
-        })
+          console.log('Supabase upload response', { uploadData, uploadError })
 
-        if (metaError) console.error('Meta insert error', metaError)
+          if (uploadError) {
+            console.error('Upload error', uploadError)
+            alert(`Erreur lors de l'upload du fichier ${f.name} : ${uploadError.message}`)
+            continue
+          }
+
+          // Insert metadata client-side (RLS removed)
+          try {
+            const { error: metaError } = await supabase.from('documents').insert({
+              dossier_id: dossierId,
+              nom_fichier: f.name,
+              chemin_storage: path,
+              type_document: f.type
+            })
+
+            if (metaError) {
+              console.error('Meta insert error', metaError)
+              alert(`Impossible d'enregistrer les métadonnées pour ${f.name}: ${metaError.message}`)
+            }
+          } catch (err) {
+            console.error('Meta insert exception', err)
+            const message = err instanceof Error ? err.message : String(err)
+            alert(`Erreur lors de l'enregistrement des métadonnées pour ${f.name}: ${message}`)
+          }
+          } catch (err) {
+            console.error('Unexpected upload error', err)
+            const message = err instanceof Error ? err.message : String(err)
+            alert(`Erreur inattendue lors de l'upload du fichier ${f.name} : ${message}`)
+          }
       }
 
       // create Stripe Checkout session
