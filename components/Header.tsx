@@ -18,11 +18,10 @@ export default function Header() {
           </div>
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden md:flex items-center space-x-4">
-          <Link href="/deposer-dossier" className="px-4 py-2 bg-red-600 text-white rounded">Déposer mon dossier</Link>
-          <Link href="#faq" className="text-gray-700">FAQ</Link>
-          <Link href="#contact" className="text-gray-700">Contact</Link>
-          <Link href="/admin" className="text-gray-700">Admin</Link>
+        <nav aria-label="Main navigation" className="hidden md:flex items-center space-x-6">
+          <Link href="#faq" className="text-gray-700 hover:text-blue-900">FAQ</Link>
+          <Link href="#contact" className="text-gray-700 hover:text-blue-900">Contact</Link>
+          <Link href="/deposer-dossier" className="ml-4 px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold shadow">Déposer mon dossier</Link>
         </nav>
 
         <div className="md:hidden flex items-center">

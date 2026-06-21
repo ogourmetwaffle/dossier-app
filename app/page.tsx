@@ -1,12 +1,13 @@
 'use client'
 
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 import Hero from '@/components/Hero'
 import Benefits from '@/components/Benefits'
 import Process from '@/components/Process'
 import FAQ from '@/components/FAQ'
 import Contact from '@/components/Contact'
+import Pricing from '@/components/Pricing'
+import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
@@ -24,6 +25,10 @@ export default function Home() {
           <div className="max-w-5xl mx-auto px-6 py-12">
             <Process />
           </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto px-6 py-12">
+          <Pricing />
         </section>
 
         <section className="max-w-5xl mx-auto px-6 py-12">
