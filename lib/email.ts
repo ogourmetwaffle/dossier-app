@@ -135,4 +135,6 @@ export async function sendPaymentConfirmationEmail(email: string, numeroDossier:
   return result
 }
 
-export default { sendClientConfirmationEmail, sendAdminNotificationEmail, sendPaymentConfirmationEmail }
+const emailClient = { sendClientConfirmationEmail, sendAdminNotificationEmail, sendPaymentConfirmationEmail }
+
+export default emailClient

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from 'react'
+import { Cloud as CloudIcon, File as FileIcon, Image as ImageIcon, Trash2 as Trash2Icon } from 'lucide-react'
 
 type Props = {
   onFilesChange?: (files: File[]) => void
@@ -23,9 +24,9 @@ export default function FileUpload({ onFilesChange }: Props) {
 
   const fileIcon = (name: string) => {
     const ext = name.split('.').pop()?.toLowerCase() || ''
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return '🖼'
-    if (ext === 'pdf') return '📄'
-    return '📁'
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return <ImageIcon size={16} className="text-indigo-600" />
+    if (ext === 'pdf') return <FileIcon size={16} className="text-indigo-600" />
+    return <FileIcon size={16} className="text-indigo-600" />
   }
 
   const validateAndSet = (arr: File[]) => {
@@ -62,7 +63,7 @@ export default function FileUpload({ onFilesChange }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-lg border p-4 h-[380px] flex flex-col">
+    <div className="bg-white rounded-lg border p-4 h-95 flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         <div className="text-gray-600 rounded p-1">
@@ -82,8 +83,8 @@ export default function FileUpload({ onFilesChange }: Props) {
           onDrop={handleDrop}
           className={`w-full rounded-lg transition cursor-pointer ${dragOver ? 'border-2 border-blue-200 bg-white shadow-sm' : 'border-2 border-dashed border-gray-200 bg-gray-50'}`}
         >
-          <div className="flex flex-col items-center justify-center h-[140px] px-3">
-            <div className="text-3xl mb-1">☁️</div>
+          <div className="flex flex-col items-center justify-center h-35 px-3">
+            <div className="text-3xl mb-1"><CloudIcon size={40} className="text-gray-400" /></div>
             <div className="mb-1 text-sm text-gray-700">Déposer vos documents</div>
             <div className="text-sm text-blue-600"><button type="button" onClick={() => inputRef.current?.click()} className="underline cursor-pointer">ou cliquez pour sélectionner</button></div>
             <input ref={inputRef} type="file" accept=".pdf,image/jpeg,image/png" multiple onChange={(e) => handleFiles(e.target.files)} className="hidden" />
@@ -100,25 +101,29 @@ export default function FileUpload({ onFilesChange }: Props) {
       {/* Selected files (inside card) */}
       <div className="mt-2">
         <div className="text-sm font-medium text-gray-900 mb-2">Fichiers sélectionnés ({files.length})</div>
-        <div className="space-y-2 overflow-auto pr-2" style={{ maxHeight: '176px' }}>
-          {files.length === 0 && (
-            <div className="text-sm text-gray-500">Ajoutez vos documents pour continuer.</div>
-          )}
+        <div className="border border-gray-100 rounded-md bg-white shadow-sm overflow-auto" style={{ maxHeight: '168px' }}>
+          <div className="p-2">
+            {files.length === 0 && (
+              <div className="text-sm text-gray-500 py-3">Ajoutez vos documents pour continuer.</div>
+            )}
+          </div>
 
-          {files.map((f, idx) => (
-            <div key={`${f.name}-${idx}`} className="flex items-center justify-between bg-gray-50 border rounded-md px-3" style={{ minHeight: '48px', maxHeight: '56px' }}>
-              <div className="flex items-center gap-3 min-w-0 py-2">
-                <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded flex items-center justify-center border text-sm">{fileIcon(f.name)}</div>
-                <div className="min-w-0">
-                  <div className="text-sm text-gray-800 truncate max-w-[60%] sm:max-w-[280px]">{shortName(f.name, 40)}</div>
+          <div className="divide-y divide-gray-100">
+            {files.map((f, idx) => (
+              <div key={`${f.name}-${idx}`} className="flex items-center justify-between px-3" style={{ height: '52px' }}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded flex items-center justify-center text-sm">{fileIcon(f.name)}</div>
+                  <div className="min-w-0">
+                    <div className="text-sm text-gray-800 truncate max-w-[60%] sm:max-w-70">{shortName(f.name, 40)}</div>
+                  </div>
+                  <div className="text-xs text-gray-500 ml-3">{(f.size/1024/1024).toFixed(2)} MB</div>
                 </div>
-                <div className="text-xs text-gray-500 ml-3">{(f.size/1024/1024).toFixed(2)} MB</div>
+                <button type="button" onClick={() => removeFile(f.name)} className="ml-3 text-red-600 rounded-full p-2 cursor-pointer" aria-label={`Supprimer ${f.name}`}>
+                  <Trash2Icon size={16} />
+                </button>
               </div>
-              <button type="button" onClick={() => removeFile(f.name)} className="ml-3 bg-red-50 text-red-600 rounded-full p-2 cursor-pointer" aria-label={`Supprimer ${f.name}`}>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

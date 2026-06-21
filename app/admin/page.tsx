@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import AdminHeader from '@/components/AdminHeader'
-import AdminDossierList from '@/components/AdminDossierList'
 import { supabase } from '@/lib/supabase'
+import AdminPanel from '@/components/admin/AdminPanel'
 
 export default function AdminPage() {
   const router = useRouter()
@@ -25,15 +24,8 @@ export default function AdminPage() {
   if (checking) return <div className="min-h-screen flex items-center justify-center">Vérification...</div>
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <AdminHeader />
-
-      <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <h1 className="text-2xl font-bold mb-4">Tableau de bord</h1>
-          <AdminDossierList />
-        </div>
-      </main>
+    <div className="min-h-screen">
+      <AdminPanel />
     </div>
   )
 }

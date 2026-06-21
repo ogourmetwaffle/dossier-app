@@ -33,7 +33,10 @@ export default function AdminDossierList() {
   }
 
   useEffect(() => {
-    fetchDossiers()
+    const run = async () => {
+      await fetchDossiers()
+    }
+    run()
   }, [])
 
   const updateStatus = async (id: string, statut: string) => {
