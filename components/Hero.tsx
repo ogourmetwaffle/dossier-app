@@ -18,8 +18,7 @@ export default function Hero() {
 
         <div className="w-full md:w-1/2">
           <div className="rounded-lg overflow-hidden shadow-lg bg-white">
-            {/* Use a bundled placeholder image from public/ to avoid missing file errors. Replace with /flyer-mock.jpg in public/ when available */}
-            <Image src="/file.svg" alt="Permis Express" width={800} height={450} className="w-full h-56 object-cover" priority />
+            <Image src="/flyer-mock.png" alt="Permis Express" width={800} height={450} className="w-full h-56 object-cover" priority />
           </div>
         </div>
       </div>
