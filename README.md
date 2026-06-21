@@ -90,7 +90,15 @@ Ajoutez ces variables dans Settings > Environment Variables (Project) sur Vercel
 - `SUPABASE_SERVICE_ROLE_KEY` (server only, **sensible**)
 - `NEXT_PUBLIC_APP_URL` (optionnel — url publique, ex: https://my-app.vercel.app)
 
+Additional server-only variables for email integration:
+
+- `BREVO_API_KEY` (server only) — clé API pour l'API Brevo (ex: xkeysib-...)
+- `ADMIN_EMAIL` (server only) — adresse email de notification admin (ex: contact@permis-express.fr)
+- `SENDER_EMAIL` (server only) — adresse email d'expédition (ex: contact@permis-express.fr)
+
 Ne rendez pas publiques les clés `STRIPE_SECRET_KEY` ni `SUPABASE_SERVICE_ROLE_KEY`.
+
+Ne rendez pas publiques `BREVO_API_KEY`, ni les adresses `ADMIN_EMAIL`/`SENDER_EMAIL` configurées pour l'envoi d'emails.
 
 ---
 

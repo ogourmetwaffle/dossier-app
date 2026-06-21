@@ -1,17 +1,19 @@
 "use client"
 
-import { useState } from 'react'
-import FileUpload from '@/components/FileUpload'
+import React, { useState } from 'react'
+import FileUpload from './FileUpload'
 import Button from '@/components/Button'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function DossierForm() {
-  const [form, setForm] = useState({ nom: '', prenom: '', email: '', telephone: '', whatsapp: '', adresse: '', pays_permis: '' })
+  const [form, setForm] = useState({ nom: '', prenom: '', email: '', telephone: '', pays_permis: '' })
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
+
+  const inputClass = 'border border-gray-200 rounded-md px-3 py-2 w-full text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-100'
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -20,12 +22,13 @@ export default function DossierForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
     try {
       const newErrors: Record<string,string> = {}
       if (!form.nom) newErrors.nom = 'Nom requis'
       if (!form.prenom) newErrors.prenom = 'Prénom requis'
       if (!form.email) newErrors.email = 'Email requis'
+      if (!form.telephone) newErrors.telephone = 'Téléphone requis'
+      if (!form.pays_permis) newErrors.pays_permis = 'Pays requis'
       if (uploadedFiles.length === 0) newErrors.files = 'Ajoutez au moins un document'
 
       if (Object.keys(newErrors).length > 0) {
@@ -36,7 +39,6 @@ export default function DossierForm() {
 
       const numeroDossier = 'PE-' + Date.now()
 
-      // create dossier record
       const { data: dossierData, error: insertError } = await supabase
         .from('dossiers')
         .insert({
@@ -45,8 +47,6 @@ export default function DossierForm() {
           prenom: form.prenom,
           email: form.email,
           telephone: form.telephone,
-          whatsapp: form.whatsapp,
-          adresse: form.adresse,
           pays_permis: form.pays_permis,
           statut: 'NOUVEAU',
           montant: 49,
@@ -62,66 +62,27 @@ export default function DossierForm() {
         return
       }
 
-      const dossierId = dossierData.id
+      const dossierId = (dossierData as { id: number }).id
 
-      // upload files to Supabase Storage
       for (const f of uploadedFiles) {
         try {
-          // sanitize and encode filename to avoid issues with spaces/special chars
           const baseName = f.name.replace(/[^a-z0-9.\-_.]/gi, '_')
           const path = `${numeroDossier}/${Date.now()}_${baseName}`
-
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('documents')
-            .upload(path, f, { contentType: f.type, upsert: false })
-
-          console.log('Supabase upload response', { uploadData, uploadError })
-
-          if (uploadError) {
-            console.error('Upload error', uploadError)
-            alert(`Erreur lors de l'upload du fichier ${f.name} : ${uploadError.message}`)
-            continue
-          }
-
-          // metadata storage removed — no DB insert for file metadata
-          } catch (err) {
-            console.error('Unexpected upload error', err)
-            const message = err instanceof Error ? err.message : String(err)
-            alert(`Erreur inattendue lors de l'upload du fichier ${f.name} : ${message}`)
-          }
-      }
-      // attempt to send confirmation emails (non-blocking for business flow)
-      try {
-        await fetch('/api/send-emails', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: form.email,
-            nom: form.nom,
-            prenom: form.prenom,
-            telephone: form.telephone,
-            numeroDossier
-          })
-        })
-      } catch (err) {
-        console.error('Failed to call send-emails API', err)
+          // Supabase expects a File or Blob in browser
+          await supabase.storage.from('documents').upload(path, f, { contentType: f.type, upsert: false })
+        } catch (err) {
+          console.error('upload', err)
+        }
       }
 
-      // create Stripe Checkout session
       const resp = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numero: numeroDossier, dossierId })
       })
-
       const json = await resp.json()
-      if (json?.url) {
-        // redirect to Stripe Checkout
-        window.location.href = json.url
-      } else {
-        setErrors({ form: 'Impossible de démarrer le paiement' })
-        router.push(`/merci?numero=${encodeURIComponent(numeroDossier)}`)
-      }
+      if (json?.url) window.location.href = json.url
+      else router.push(`/merci?numero=${encodeURIComponent(numeroDossier)}`)
     } catch (err) {
       console.error(err)
       setErrors({ form: 'Erreur lors de la création du dossier' })
@@ -131,63 +92,72 @@ export default function DossierForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white p-6 rounded shadow">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="nom" className="block text-sm font-medium mb-1">Nom</label>
-          <input id="nom" name="nom" placeholder="Nom" value={form.nom} onChange={handleChange} className="border p-2 w-full" aria-invalid={!!errors.nom} aria-describedby={errors.nom ? 'err-nom' : undefined} />
-          {errors.nom && <div id="err-nom" className="text-sm text-red-600 mt-1">{errors.nom}</div>}
+    <form onSubmit={handleSubmit} className="min-h-[calc(100vh-120px)] flex items-center justify-center">
+      <div className="w-full max-w-5xl px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          <div className="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
+            <h3 className="text-base font-semibold text-[#173B8C] mb-2">Informations personnelles</h3>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs">Nom <span className="text-red-600">*</span></label>
+                <input name="nom" value={form.nom} onChange={handleChange} className={inputClass} placeholder="Nom" />
+                {errors.nom && <div className="text-xs text-red-600">{errors.nom}</div>}
+              </div>
+              <div>
+                <label className="text-xs">Prénom <span className="text-red-600">*</span></label>
+                <input name="prenom" value={form.prenom} onChange={handleChange} className={inputClass} placeholder="Prénom" />
+                {errors.prenom && <div className="text-xs text-red-600">{errors.prenom}</div>}
+              </div>
+              <div>
+                <label className="text-xs">Email <span className="text-red-600">*</span></label>
+                <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="exemple@email.com" />
+                {errors.email && <div className="text-xs text-red-600">{errors.email}</div>}
+              </div>
+              <div>
+                <label className="text-xs">Téléphone <span className="text-red-600">*</span></label>
+                <input name="telephone" value={form.telephone} onChange={handleChange} className={inputClass} placeholder="06 12 34 56 78" />
+                {errors.telephone && <div className="text-xs text-red-600">{errors.telephone}</div>}
+              </div>
+              <div>
+                <label className="text-xs">Pays du permis <span className="text-red-600">*</span></label>
+                <select name="pays_permis" value={form.pays_permis} onChange={handleChange} className={inputClass}>
+                  <option value="">Sélectionnez le pays</option>
+                  <option>Maroc</option>
+                  <option>Algérie</option>
+                  <option>Tunisie</option>
+                  <option>Autre</option>
+                </select>
+                {errors.pays_permis && <div className="text-xs text-red-600">{errors.pays_permis}</div>}
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-gray-500">🔒 Vos informations restent confidentielles.</div>
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
+            <h3 className="text-base font-semibold text-[#173B8C] mb-2">Documents</h3>
+            <FileUpload onFilesChange={(f: File[]) => setUploadedFiles(f)} />
+            {errors.files && <div className="text-xs text-red-600 mt-2">{errors.files}</div>}
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-[#173B8C] mb-2">Votre dossier</h3>
+              <div className="text-2xl font-extrabold text-[#173B8C] mb-2">49€</div>
+              <ul className="text-sm text-gray-700 space-y-1 mb-3">
+                <li>✓ Vérification du dossier</li>
+                <li>✓ Assistance personnalisée</li>
+                <li>✓ Réponse rapide</li>
+                <li>✓ Traitement sécurisé</li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="text-xs text-gray-600 mb-2">🔒 Paiement sécurisé Stripe</div>
+              <Button type="submit" loading={loading} className="w-full bg-[#E30613] hover:bg-red-700 text-white text-sm py-3">Payer et déposer mon dossier</Button>
+              <div className="mt-2 text-center text-xs text-gray-500">Visa • Mastercard • Stripe</div>
+            </div>
+          </div>
         </div>
-
-        <div>
-          <label htmlFor="prenom" className="block text-sm font-medium mb-1">Prénom</label>
-          <input id="prenom" name="prenom" placeholder="Prénom" value={form.prenom} onChange={handleChange} className="border p-2 w-full" aria-invalid={!!errors.prenom} aria-describedby={errors.prenom ? 'err-prenom' : undefined} />
-          {errors.prenom && <div id="err-prenom" className="text-sm text-red-600 mt-1">{errors.prenom}</div>}
-        </div>
-
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-          <input id="email" name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} className="border p-2 w-full" aria-invalid={!!errors.email} aria-describedby={errors.email ? 'err-email' : undefined} />
-          {errors.email && <div id="err-email" className="text-sm text-red-600 mt-1">{errors.email}</div>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Téléphone</label>
-          <input name="telephone" placeholder="Téléphone" value={form.telephone} onChange={handleChange} className="border p-2 w-full" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">WhatsApp</label>
-          <input name="whatsapp" placeholder="WhatsApp" value={form.whatsapp} onChange={handleChange} className="border p-2 w-full" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Adresse</label>
-          <input name="adresse" placeholder="Adresse" value={form.adresse} onChange={handleChange} className="border p-2 w-full" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Pays du permis</label>
-          <select name="pays_permis" value={form.pays_permis} onChange={handleChange} className="border p-2 w-full">
-            <option value="">Pays du permis</option>
-            <option>Maroc</option>
-            <option>Algérie</option>
-            <option>Tunisie</option>
-            <option>Autre</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <label className="block font-semibold mb-2">Documents (PDF, JPG, PNG) — max 20MB chacun</label>
-        <FileUpload onFilesChange={(f) => setUploadedFiles(f)} />
-      </div>
-
-      {errors.form && <div className="text-sm text-red-600 mt-4">{errors.form}</div>}
-
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-sm text-gray-600">Montant: <span className="font-bold">49€</span></div>
-        <Button loading={loading} className="w-full sm:w-auto">{loading ? 'Envoi...' : 'Payer et déposer'}</Button>
       </div>
     </form>
   )

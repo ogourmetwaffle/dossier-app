@@ -104,6 +104,29 @@ Ces routes sont server-side et utilisent des variables d'environnement non publi
 
 ---
 
+## Mises à jour récentes
+
+- Emails: intégration avec Brevo via `lib/email.ts` et endpoint serveur `POST /api/send-emails`.
+   - Fonctions disponibles: `sendClientConfirmationEmail`, `sendAdminNotificationEmail`, `sendPaymentConfirmationEmail`.
+   - Les envois sont non bloquants pour le flux métier; les erreurs sont loggées côté serveur.
+   - Variables d'environnement nécessaires: `BREVO_API_KEY`, `ADMIN_EMAIL`, `SENDER_EMAIL` (toutes server-side).
+
+- Stockage des fichiers: l'application téléverse les fichiers dans le bucket `documents` uniquement; la création d'une table `documents` en base a été supprimée par défaut. Si vous voulez stocker des métadonnées, ajoutez explicitement une table et adaptez le frontend/serveur.
+
+- Webhook / Stripe: le handler webhook utilise désormais une initialisation dynamique de Stripe à l'intérieur du handler afin d'éviter des effets lors du build (Turbopack). Le webhook met à jour `dossiers.paiement_effectue` en utilisant `SUPABASE_SERVICE_ROLE_KEY` côté serveur.
+
+- Flux métier mis à jour:
+   - Après création de `dossiers`, le frontend appelle `POST /api/send-emails` pour notifier le client et l'admin (non bloquant).
+   - Après `checkout.session.completed`, le webhook met à jour la table `dossiers` puis déclenche `sendPaymentConfirmationEmail` si l'email est disponible.
+
+- Variables d'environnement (rappel)
+   - Public / front-end: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL`.
+   - Server-only (Vercel environment variables): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `BREVO_API_KEY`, `ADMIN_EMAIL`, `SENDER_EMAIL`.
+
+---
+
+---
+
 ## Plan détaillé des tâches (étapes) — suivi d'avancement
 
 1. Mettre en place la landing page (Hero, Avantages, Processus, FAQ, Contact) — OK
