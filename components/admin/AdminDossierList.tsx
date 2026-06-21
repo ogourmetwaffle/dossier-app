@@ -14,24 +14,27 @@ type Dossier = {
 }
 
 export default function AdminDossierList({ dossiers: propDossiers, onSelect }: { dossiers?: Dossier[]; onSelect?: (id: string) => void }) {
-  const [dossiers, setDossiers] = useState<Dossier[]>(propDossiers || [])
+  const [localDossiers, setLocalDossiers] = useState<Dossier[]>([])
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('Tous')
 
   useEffect(() => {
     if (propDossiers) return
+
     const fetch = async () => {
       setLoading(true)
       const { data, error } = await supabase.from('dossiers').select('*').order('created_at', { ascending: false })
       if (error) console.error('supabase fetch dossiers', error)
-      setDossiers(((data) as unknown) as Dossier[] || [])
+      setLocalDossiers(((data) as unknown) as Dossier[] || [])
       setLoading(false)
     }
     fetch()
   }, [propDossiers])
 
-  const filtered = dossiers.filter((d) => {
+  const sourceDossiers = propDossiers ?? localDossiers
+
+  const filtered = sourceDossiers.filter((d) => {
     if (filter !== 'Tous') {
       if (filter === 'Nouveau' && d.statut !== 'NOUVEAU') return false
       if (filter === 'En cours' && d.statut !== 'EN_COURS') return false
