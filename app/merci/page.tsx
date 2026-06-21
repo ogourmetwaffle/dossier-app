@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 type Props = {
   searchParams?: { numero?: string }
 }
@@ -19,7 +21,7 @@ export default function Merci({ searchParams }: Props) {
         )}
 
         <div className="mt-6 flex items-center justify-center gap-4">
-          <a href="/" className="text-blue-700 underline">Retour à l'accueil</a>
+          <Link href="/" className="text-blue-700 underline">Retour à l&apos;accueil</Link>
         </div>
       </div>
     </div>

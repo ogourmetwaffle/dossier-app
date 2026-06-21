@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import FileUpload from '@/components/FileUpload'
+import Button from '@/components/Button'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -9,6 +10,7 @@ export default function DossierForm() {
   const [form, setForm] = useState({ nom: '', prenom: '', email: '', telephone: '', whatsapp: '', adresse: '', pays_permis: '' })
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -20,8 +22,14 @@ export default function DossierForm() {
     setLoading(true)
 
     try {
-      if (uploadedFiles.length === 0) {
-        alert('Veuillez ajouter au moins un document')
+      const newErrors: Record<string,string> = {}
+      if (!form.nom) newErrors.nom = 'Nom requis'
+      if (!form.prenom) newErrors.prenom = 'Prénom requis'
+      if (!form.email) newErrors.email = 'Email requis'
+      if (uploadedFiles.length === 0) newErrors.files = 'Ajoutez au moins un document'
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
         setLoading(false)
         return
       }
@@ -49,14 +57,14 @@ export default function DossierForm() {
 
       if (insertError || !dossierData) {
         console.error(insertError)
-        alert('Erreur lors de la création du dossier')
+        setErrors({ form: 'Erreur lors de la création du dossier' })
         setLoading(false)
         return
       }
 
       const dossierId = dossierData.id
 
-      // upload files to Supabase Storage and save metadata
+      // upload files to Supabase Storage
       for (const f of uploadedFiles) {
         try {
           // sanitize and encode filename to avoid issues with spaces/special chars
@@ -82,6 +90,22 @@ export default function DossierForm() {
             alert(`Erreur inattendue lors de l'upload du fichier ${f.name} : ${message}`)
           }
       }
+      // attempt to send confirmation emails (non-blocking for business flow)
+      try {
+        await fetch('/api/send-emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: form.email,
+            nom: form.nom,
+            prenom: form.prenom,
+            telephone: form.telephone,
+            numeroDossier
+          })
+        })
+      } catch (err) {
+        console.error('Failed to call send-emails API', err)
+      }
 
       // create Stripe Checkout session
       const resp = await fetch('/api/create-checkout-session', {
@@ -95,12 +119,12 @@ export default function DossierForm() {
         // redirect to Stripe Checkout
         window.location.href = json.url
       } else {
-        alert('Impossible de démarrer le paiement')
+        setErrors({ form: 'Impossible de démarrer le paiement' })
         router.push(`/merci?numero=${encodeURIComponent(numeroDossier)}`)
       }
     } catch (err) {
       console.error(err)
-      alert('Erreur lors de la création du dossier')
+      setErrors({ form: 'Erreur lors de la création du dossier' })
     } finally {
       setLoading(false)
     }
@@ -109,19 +133,49 @@ export default function DossierForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white p-6 rounded shadow">
       <div className="grid md:grid-cols-2 gap-4">
-        <input name="nom" placeholder="Nom" value={form.nom} onChange={handleChange} className="border p-2" required />
-        <input name="prenom" placeholder="Prénom" value={form.prenom} onChange={handleChange} className="border p-2" required />
-        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} className="border p-2" required />
-        <input name="telephone" placeholder="Téléphone" value={form.telephone} onChange={handleChange} className="border p-2" />
-        <input name="whatsapp" placeholder="WhatsApp" value={form.whatsapp} onChange={handleChange} className="border p-2" />
-        <input name="adresse" placeholder="Adresse" value={form.adresse} onChange={handleChange} className="border p-2" />
-        <select name="pays_permis" value={form.pays_permis} onChange={handleChange} className="border p-2">
-          <option value="">Pays du permis</option>
-          <option>Maroc</option>
-          <option>Algérie</option>
-          <option>Tunisie</option>
-          <option>Autre</option>
-        </select>
+        <div>
+          <label htmlFor="nom" className="block text-sm font-medium mb-1">Nom</label>
+          <input id="nom" name="nom" placeholder="Nom" value={form.nom} onChange={handleChange} className="border p-2 w-full" aria-invalid={!!errors.nom} aria-describedby={errors.nom ? 'err-nom' : undefined} />
+          {errors.nom && <div id="err-nom" className="text-sm text-red-600 mt-1">{errors.nom}</div>}
+        </div>
+
+        <div>
+          <label htmlFor="prenom" className="block text-sm font-medium mb-1">Prénom</label>
+          <input id="prenom" name="prenom" placeholder="Prénom" value={form.prenom} onChange={handleChange} className="border p-2 w-full" aria-invalid={!!errors.prenom} aria-describedby={errors.prenom ? 'err-prenom' : undefined} />
+          {errors.prenom && <div id="err-prenom" className="text-sm text-red-600 mt-1">{errors.prenom}</div>}
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+          <input id="email" name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} className="border p-2 w-full" aria-invalid={!!errors.email} aria-describedby={errors.email ? 'err-email' : undefined} />
+          {errors.email && <div id="err-email" className="text-sm text-red-600 mt-1">{errors.email}</div>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Téléphone</label>
+          <input name="telephone" placeholder="Téléphone" value={form.telephone} onChange={handleChange} className="border p-2 w-full" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">WhatsApp</label>
+          <input name="whatsapp" placeholder="WhatsApp" value={form.whatsapp} onChange={handleChange} className="border p-2 w-full" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Adresse</label>
+          <input name="adresse" placeholder="Adresse" value={form.adresse} onChange={handleChange} className="border p-2 w-full" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Pays du permis</label>
+          <select name="pays_permis" value={form.pays_permis} onChange={handleChange} className="border p-2 w-full">
+            <option value="">Pays du permis</option>
+            <option>Maroc</option>
+            <option>Algérie</option>
+            <option>Tunisie</option>
+            <option>Autre</option>
+          </select>
+        </div>
       </div>
 
       <div className="mt-4">
@@ -129,9 +183,11 @@ export default function DossierForm() {
         <FileUpload onFilesChange={(f) => setUploadedFiles(f)} />
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
+      {errors.form && <div className="text-sm text-red-600 mt-4">{errors.form}</div>}
+
+      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-sm text-gray-600">Montant: <span className="font-bold">49€</span></div>
-        <button disabled={loading} className="bg-red-600 text-white px-4 py-2 rounded">{loading ? 'Envoi...' : 'Payer et déposer'}</button>
+        <Button loading={loading} className="w-full sm:w-auto">{loading ? 'Envoi...' : 'Payer et déposer'}</Button>
       </div>
     </form>
   )

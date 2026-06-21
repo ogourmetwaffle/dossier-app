@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { sendPaymentConfirmationEmail } from '@/lib/email'
 
 export async function POST(req: Request) {
   const Stripe = (await import('stripe')).default
@@ -41,6 +42,16 @@ export async function POST(req: Request) {
       try {
         await supabaseAdmin.from('dossiers').update({ paiement_effectue: true, stripe_payment_id: session.id }).eq('id', dossierId)
         console.log('Dossier updated for', dossierId)
+
+        // fetch dossier to get email and numero_dossier for notification
+        try {
+          const { data: dossierRow, error: fetchErr } = await supabaseAdmin.from('dossiers').select('email,numero_dossier').eq('id', dossierId).single()
+          if (!fetchErr && dossierRow?.email) {
+            await sendPaymentConfirmationEmail(dossierRow.email, dossierRow.numero_dossier)
+          }
+        } catch (err) {
+          console.error('Error fetching dossier for email notification', err)
+        }
       } catch (err) {
         console.error('Error updating dossier', err)
       }
