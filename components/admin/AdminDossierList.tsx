@@ -18,6 +18,8 @@ export default function AdminDossierList({ dossiers: propDossiers, onSelect }: {
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('Tous')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     if (propDossiers) return
@@ -45,6 +47,16 @@ export default function AdminDossierList({ dossiers: propDossiers, onSelect }: {
     const q = query.toLowerCase()
     return `${d.numero_dossier}`.toLowerCase().includes(q) || `${d.nom}`.toLowerCase().includes(q) || `${d.prenom}`.toLowerCase().includes(q) || `${d.email}`.toLowerCase().includes(q)
   })
+
+  const total = filtered.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const start = (page - 1) * pageSize
+  const paginated = filtered.slice(start, start + pageSize)
+
+  // reset to first page when filters change
+  React.useEffect(() => {
+    setPage(1)
+  }, [query, filter, pageSize, propDossiers, localDossiers])
 
   return (
     <div className="bg-white rounded-md shadow-sm border">
@@ -77,10 +89,31 @@ export default function AdminDossierList({ dossiers: propDossiers, onSelect }: {
 
         <div>
           {loading && <div className="p-4 text-sm text-gray-500">Chargement...</div>}
-          {!loading && filtered.map((d) => (
+          {!loading && paginated.map((d) => (
             <AdminDossierRow key={d.id} dossier={d} onOpen={onSelect} />
           ))}
           {!loading && filtered.length === 0 && <div className="p-4 text-sm text-gray-500">Aucun dossier trouvé.</div>}
+        </div>
+
+        <div className="p-3 border-t flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div>Afficher</div>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="border rounded px-2 py-1 text-sm">
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <div>sur {total} résultats</div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1 border rounded text-sm">Préc</button>
+            <div className="text-sm">
+              Page {page} / {totalPages}
+            </div>
+            <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} className="px-3 py-1 border rounded text-sm">Suiv</button>
+          </div>
         </div>
       </div>
     </div>
