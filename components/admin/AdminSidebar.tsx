@@ -3,7 +3,7 @@ import { Home, Folder, PlusCircle, Clock, CheckCircle, XCircle, Settings, LogOut
 
 export default function AdminSidebar() {
   return (
-    <aside className="w-44 bg-[#173B8C] h-screen border-r shadow-sm">
+    <aside className="w-44 bg-[#173B8C] min-h-screen border-r shadow-sm flex-shrink-0">
       <div className="h-full flex flex-col justify-between text-white">
         <div>
           <div className="px-3 py-4 flex flex-col items-start gap-3">
