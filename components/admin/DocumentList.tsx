@@ -19,6 +19,7 @@ type DocItem = {
 export default function DocumentList({ numero }: { numero?: string }) {
   const [docs, setDocs] = useState<DocItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [downloading, setDownloading] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (!numero) return
@@ -71,40 +72,39 @@ export default function DocumentList({ numero }: { numero?: string }) {
     a.remove()
   }
 
-  const handleDownload = (url?: string, name?: string) => {
+  const handleDownload = async (url?: string, name?: string, key?: string) => {
     if (!url) return
-    console.log('download click', url)
-    // Try a synchronous anchor click first
+    const dlKey = key || url
     try {
+      setDownloading(prev => ({ ...prev, [dlKey]: true }))
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url
-      a.target = '_blank'
-      a.rel = 'noopener noreferrer'
-      // download attribute may be ignored for cross-origin, but clicking will navigate or trigger download
-      a.download = name || ''
+      a.href = blobUrl
+      a.download = name || 'document'
       document.body.appendChild(a)
       a.click()
       a.remove()
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
     } catch (err) {
-      console.error('anchor download failed, attempting fetch fallback', err)
-      ;(async () => {
-        try {
-          const res = await fetch(url)
-          if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
-          const blob = await res.blob()
-          const blobUrl = URL.createObjectURL(blob)
-          const a2 = document.createElement('a')
-          a2.href = blobUrl
-          a2.download = name || 'document'
-          document.body.appendChild(a2)
-          a2.click()
-          a2.remove()
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
-        } catch (e2) {
-          console.error('download fallback failed', e2)
-          alert('Impossible de télécharger le document.')
-        }
-      })()
+      console.error('download failed, falling back to opening in new tab', err)
+      // Fallback: open in new tab (may let user save manually)
+      try {
+        const a2 = document.createElement('a')
+        a2.href = url
+        a2.target = '_blank'
+        a2.rel = 'noopener noreferrer'
+        document.body.appendChild(a2)
+        a2.click()
+        a2.remove()
+      } catch (e2) {
+        console.error('fallback open failed', e2)
+        alert('Impossible de télécharger le document.')
+      }
+    } finally {
+      setDownloading(prev => ({ ...prev, [dlKey]: false }))
     }
   }
 
@@ -125,7 +125,20 @@ export default function DocumentList({ numero }: { numero?: string }) {
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => handleOpen(d.url ?? undefined)} className="text-sm text-blue-600 flex items-center gap-1 cursor-pointer"><EyeIcon size={14}/>Prévisualiser</button>
-            <button type="button" onClick={() => handleDownload(d.url ?? undefined, d.name)} className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer"><DownloadIcon size={14}/>Télécharger</button>
+            {(() => {
+              const dlKey = d.url ?? `${numero}-${i}-${d.name}`
+              return (
+                <button
+                  type="button"
+                  onClick={() => handleDownload(d.url ?? undefined, d.name, dlKey)}
+                  disabled={!!downloading[dlKey]}
+                  className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <DownloadIcon size={14}/>
+                  {downloading[dlKey] ? 'Téléchargement...' : 'Télécharger'}
+                </button>
+              )
+            })()}
           </div>
         </div>
       ))}
