@@ -36,9 +36,9 @@ export default function AdminDossierRow({ dossier, onOpen }: { dossier: Dossier;
       <div className="text-sm text-gray-600">{created_at ? new Date(created_at).toLocaleDateString() : ''}</div>
       <div>
         {onOpen ? (
-          <button onClick={() => onOpen(id)} className="text-sm text-blue-600 underline">Voir</button>
+          <button type="button" onClick={() => onOpen(id)} className="text-sm text-blue-600 underline cursor-pointer">Voir</button>
         ) : (
-          <Link href={`/admin/dossiers/${encodeURIComponent(numero_dossier)}`} className="text-sm text-blue-600 underline">Voir</Link>
+          <Link href={`/admin/dossiers/${encodeURIComponent(numero_dossier)}`} className="text-sm text-blue-600 underline cursor-pointer">Voir</Link>
         )}
       </div>
     </div>

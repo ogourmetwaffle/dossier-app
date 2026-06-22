@@ -39,7 +39,7 @@ export default function StatusSelector({ currentStatus, dossierId }: { currentSt
         <option value="COMPLET">Terminé</option>
         <option value="REFUSE">Refusé</option>
       </select>
-      <button onClick={updateStatus} disabled={loading} className="w-full bg-[#173B8C] text-white py-2 rounded">{loading ? 'Mise à jour...' : 'Mettre à jour'}</button>
+      <button type="button" onClick={updateStatus} disabled={loading} className="w-full bg-[#173B8C] text-white py-2 rounded cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">{loading ? 'Mise à jour...' : 'Mettre à jour'}</button>
       {message && <div className="text-sm text-gray-600">{message}</div>}
     </div>
   )

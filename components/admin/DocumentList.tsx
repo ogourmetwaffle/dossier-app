@@ -124,8 +124,8 @@ export default function DocumentList({ numero }: { numero?: string }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => handleOpen(d.url ?? undefined)} className="text-sm text-blue-600 flex items-center gap-1"><EyeIcon size={14}/>Prévisualiser</button>
-            <button onClick={() => handleDownload(d.url ?? undefined, d.name)} className="text-sm text-gray-700 flex items-center gap-1"><DownloadIcon size={14}/>Télécharger</button>
+            <button type="button" onClick={() => handleOpen(d.url ?? undefined)} className="text-sm text-blue-600 flex items-center gap-1 cursor-pointer"><EyeIcon size={14}/>Prévisualiser</button>
+            <button type="button" onClick={() => handleDownload(d.url ?? undefined, d.name)} className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer"><DownloadIcon size={14}/>Télécharger</button>
           </div>
         </div>
       ))}
