@@ -27,9 +27,26 @@ export async function GET(req: Request) {
         const path = `${numero}/${item.name}`
         const { data: signed, error: signedErr } = await supabase.storage.from('documents').createSignedUrl(path, expiresIn)
         if (signedErr) console.error('createSignedUrl error', signedErr)
+
+        // Ensure we return a numeric size when possible. Some storage backends
+        // may not include `size` on the list response, so fallback to metadata.
+        let size = item.size
+        if (typeof size !== 'number') {
+          try {
+            const { data: meta, error: metaErr } = await supabase.storage.from('documents').getMetadata(path)
+            if (metaErr) {
+              console.error('getMetadata error', metaErr)
+            } else if (meta && typeof (meta as any).size === 'number') {
+              size = (meta as any).size
+            }
+          } catch (e) {
+            console.error('getMetadata failed', e)
+          }
+        }
+
         return {
           name: item.name,
-          size: item.size,
+          size,
           updated_at: item.updated_at,
           url: signed?.signedUrl || null,
         }

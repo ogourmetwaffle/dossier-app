@@ -120,7 +120,15 @@ export default function DocumentList({ numero }: { numero?: string }) {
             <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded flex items-center justify-center">{iconFor(d.name)}</div>
             <div className="min-w-0">
               <div className="text-sm text-gray-800 truncate max-w-50">{d.name}</div>
-              <div className="text-xs text-gray-500">{(d.size/1024/1024).toFixed(2)} MB • {new Date(d.updated_at).toLocaleDateString()}</div>
+              <div className="text-xs text-gray-500">
+                {(() => {
+                  const sizeNum = Number(d.size)
+                  if (Number.isFinite(sizeNum) && sizeNum > 0) {
+                    return `${(sizeNum / 1024 / 1024).toFixed(2)} MB`
+                  }
+                  return '-' 
+                })()} • {new Date(d.updated_at).toLocaleDateString()}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
