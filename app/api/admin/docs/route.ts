@@ -29,18 +29,23 @@ export async function GET(req: Request) {
         if (signedErr) console.error('createSignedUrl error', signedErr)
 
         // Ensure we return a numeric size when possible. Some storage backends
-        // may not include `size` on the list response, so fallback to metadata.
+        // may not include `size` on the list response. The Storage client
+        // implementation in use may not expose a `getMetadata` helper, so
+        // fallback to issuing a HEAD request to the signed URL (if created)
+        // to read the `content-length` header.
         let size = item.size
-        if (typeof size !== 'number') {
-          try {
-            const { data: meta, error: metaErr } = await supabase.storage.from('documents').getMetadata(path)
-            if (metaErr) {
-              console.error('getMetadata error', metaErr)
-            } else if (meta && typeof (meta as any).size === 'number') {
-              size = (meta as any).size
+        if (typeof size !== 'number' || !Number.isFinite(size)) {
+          if (signed?.signedUrl) {
+            try {
+              const head = await fetch(signed.signedUrl, { method: 'HEAD' })
+              const cl = head.headers.get('content-length')
+              if (cl) {
+                const parsed = Number(cl)
+                if (Number.isFinite(parsed)) size = parsed
+              }
+            } catch (e) {
+              console.error('failed to fetch HEAD for signed url', e)
             }
-          } catch (e) {
-            console.error('getMetadata failed', e)
           }
         }
 
