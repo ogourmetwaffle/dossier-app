@@ -6,11 +6,21 @@ import AdminDossierList from './AdminDossierList'
 import AdminDossierDetail from './AdminDossierDetail'
 import { supabase } from '@/lib/supabase'
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({ label, value, tone }: { label: string; value: number; tone?: 'amber' | 'blue' | 'emerald' | 'red' }) {
+  const toneClasses: Record<string, string> = {
+    amber: 'bg-amber-50 text-amber-700 ring-amber-100',
+    blue: 'bg-blue-50 text-blue-800 ring-blue-100',
+    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+    red: 'bg-red-50 text-red-700 ring-red-100'
+  }
+  const toneClass = tone ? toneClasses[tone] : 'bg-white text-gray-800'
+
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm min-w-35">
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className="text-2xl font-bold mt-1 text-gray-800">{value}</div>
+    <div className={`rounded-lg p-4 shadow-sm min-w-35 ring-1 ring-inset ${tone ? 'bg-white' : ''}`}>
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-gray-500">{label}</div>
+        <div className={`px-3 py-1 rounded-full text-sm font-semibold ${tone ? toneClasses[tone] : ''}`}>{value}</div>
+      </div>
     </div>
   )
 }
@@ -49,14 +59,14 @@ export default function AdminPanel() {
             </div>
 
             <div className="flex gap-4 mb-6 flex-wrap">
-              <StatCard label="Nouveaux" value={counts.nouveaux} />
-              <StatCard label="En cours" value={counts.enCours} />
-              <StatCard label="Terminés" value={counts.termines} />
-              <StatCard label="Refusés" value={counts.refuses} />
+              <StatCard label="Nouveaux" value={counts.nouveaux} tone="amber" />
+              <StatCard label="En cours" value={counts.enCours} tone="blue" />
+              <StatCard label="Terminés" value={counts.termines} tone="emerald" />
+              <StatCard label="Refusés" value={counts.refuses} tone="red" />
             </div>
 
             <div>
-              <AdminDossierList dossiers={dossiers} onSelect={(id) => { setSelectedId(id); setShowModal(true); }} />
+              <AdminDossierList dossiers={dossiers} selectedId={selectedId} onSelect={(id) => { setSelectedId(id); setShowModal(true); }} />
             </div>
 
             {showModal && selectedId && (

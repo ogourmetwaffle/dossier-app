@@ -13,7 +13,7 @@ type Dossier = {
   statut?: string
 }
 
-export default function AdminDossierList({ dossiers: propDossiers, onSelect }: { dossiers?: Dossier[]; onSelect?: (id: string) => void }) {
+export default function AdminDossierList({ dossiers: propDossiers, selectedId, onSelect }: { dossiers?: Dossier[]; selectedId?: string; onSelect?: (id: string) => void }) {
   const [localDossiers, setLocalDossiers] = useState<Dossier[]>([])
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
@@ -90,7 +90,7 @@ export default function AdminDossierList({ dossiers: propDossiers, onSelect }: {
         <div>
           {loading && <div className="p-4 text-sm text-gray-500">Chargement...</div>}
           {!loading && paginated.map((d) => (
-            <AdminDossierRow key={d.id} dossier={d} onOpen={onSelect} />
+            <AdminDossierRow key={d.id} dossier={d} onOpen={onSelect} selectedId={selectedId} />
           ))}
           {!loading && filtered.length === 0 && <div className="p-4 text-sm text-gray-500">Aucun dossier trouvé.</div>}
         </div>
