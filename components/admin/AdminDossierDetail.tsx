@@ -23,7 +23,7 @@ type Dossier = {
   created_at?: string
 }
 
-export default function AdminDossierDetail({ id }: { id: string }) {
+export default function AdminDossierDetail({ id, onUpdated }: { id: string; onUpdated?: () => void }) {
   const [dossier, setDossier] = useState<Dossier | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -89,9 +89,9 @@ export default function AdminDossierDetail({ id }: { id: string }) {
             <div className="text-sm text-gray-600">ID: {dossier.stripe_payment_id || '-'}</div>
           </div>
 
-          <div className="bg-white border rounded p-4">
+          <div className="bg-white border rounded p-4 mt-4">
             <h4 className="text-sm font-semibold text-gray-700 mb-2">Statut dossier</h4>
-            <StatusSelector currentStatus={dossier.statut} dossierId={dossier.id} />
+            <StatusSelector currentStatus={dossier.statut} dossierId={dossier.id} onUpdated={onUpdated} />
           </div>
         </aside>
       </div>

@@ -31,13 +31,14 @@ export default function AdminPanel() {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [showModal, setShowModal] = useState(false)
 
+  const fetchDossiers = async () => {
+    const { data, error } = await supabase.from('dossiers').select('*').order('created_at', { ascending: false })
+    if (error) console.error('fetch dossiers', error)
+    setDossiers(data || [])
+  }
+
   useEffect(() => {
-    const fetch = async () => {
-      const { data, error } = await supabase.from('dossiers').select('*').order('created_at', { ascending: false })
-      if (error) console.error('fetch dossiers', error)
-      setDossiers(data || [])
-    }
-    fetch()
+    fetchDossiers()
   }, [])
 
   const counts = {
@@ -79,7 +80,7 @@ export default function AdminPanel() {
                       <button onClick={() => setShowModal(false)} className="text-gray-600 hover:text-gray-900">Fermer</button>
                     </div>
                     <div className="p-4">
-                      <AdminDossierDetail id={selectedId!} />
+                      <AdminDossierDetail id={selectedId!} onUpdated={fetchDossiers} />
                     </div>
                   </div>
                 </div>

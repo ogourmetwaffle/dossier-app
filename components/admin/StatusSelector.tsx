@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { CheckCircle, XCircle, Clock, Circle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
-export default function StatusSelector({ currentStatus, dossierId }: { currentStatus?: string; dossierId: string }) {
+export default function StatusSelector({ currentStatus, dossierId, onUpdated }: { currentStatus?: string; dossierId: string; onUpdated?: () => void }) {
   const [status, setStatus] = useState(currentStatus)
   const [loading, setLoading] = useState(false)
 
@@ -22,6 +22,8 @@ export default function StatusSelector({ currentStatus, dossierId }: { currentSt
         toast.error('Erreur lors de la mise à jour')
       } else {
         toast.success('Statut mis à jour')
+        // notify parent to refresh list/dashboard
+        onUpdated?.()
       }
     } catch (err) {
       console.error(err)

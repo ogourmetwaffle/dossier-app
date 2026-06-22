@@ -23,20 +23,25 @@ export default function AdminDossierList({ dossiers: propDossiers, selectedId, o
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  useEffect(() => {
-    if (propDossiers) return
+  const fetchDossiers = async () => {
+    setLoading(true)
+    const { data, error } = await supabase.from('dossiers').select('*').order('created_at', { ascending: false })
+    if (error) console.error('supabase fetch dossiers', error)
+    setLocalDossiers(((data) as unknown) as Dossier[] || [])
+    setLoading(false)
+  }
 
-    const fetch = async () => {
-      setLoading(true)
-      const { data, error } = await supabase.from('dossiers').select('*').order('created_at', { ascending: false })
-      if (error) console.error('supabase fetch dossiers', error)
-      setLocalDossiers(((data) as unknown) as Dossier[] || [])
-      setLoading(false)
+  useEffect(() => {
+    // If parent passed dossiers, initialize local state from it so we can refresh locally
+    if (propDossiers) {
+      setLocalDossiers(propDossiers)
+      return
     }
-    fetch()
+    fetchDossiers()
   }, [propDossiers])
 
-  const sourceDossiers = propDossiers ?? localDossiers
+  // Always render from localDossiers so fetchDossiers updates are visible
+  const sourceDossiers = localDossiers
 
   const filtered = sourceDossiers.filter((d) => {
     if (filter !== 'Tous') {
@@ -62,7 +67,15 @@ export default function AdminDossierList({ dossiers: propDossiers, selectedId, o
     setLocalSelectedId(id)
   }
 
-  const handleClose = () => setLocalSelectedId(null)
+  const handleClose = async () => {
+    // Refresh the list when closing the modal so the panel reflects updates
+    try {
+      await fetchDossiers()
+    } catch (e) {
+      console.error('error refreshing dossiers on modal close', e)
+    }
+    setLocalSelectedId(null)
+  }
 
   // reset to first page when filters change
   React.useEffect(() => {
@@ -129,7 +142,7 @@ export default function AdminDossierList({ dossiers: propDossiers, selectedId, o
       </div>
       {localSelectedId && (
         <Modal open={true} onClose={handleClose} title={`Détails dossier`}>
-          <AdminDossierDetail id={localSelectedId} />
+          <AdminDossierDetail id={localSelectedId} onUpdated={fetchDossiers} />
         </Modal>
       )}
     </div>
