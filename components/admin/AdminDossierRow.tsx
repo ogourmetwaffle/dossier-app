@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { CheckCircle, XCircle, Circle } from 'lucide-react'
+import { CheckCircle, XCircle, Circle, Clock } from 'lucide-react'
 
 type Dossier = {
   id: string
@@ -20,10 +20,31 @@ export default function AdminDossierRow({ dossier, onOpen }: { dossier: Dossier;
   const gridStyle = { gridTemplateColumns: '220px 1fr 120px 110px 120px 120px 80px' }
 
   const badge = () => {
-    if (statut === 'NOUVEAU') return <span className="px-3 py-1 rounded-full text-xs font-medium flex items-center" style={{ background: '#FFF7ED', color: '#B45309' }}><Circle size={12} className="mr-2" />Nouveau</span>
-    if (statut === 'EN_COURS') return <span className="px-3 py-1 rounded-full text-xs font-medium flex items-center" style={{ background: '#E8F0FF', color: '#173B8C' }}><Circle size={12} className="mr-2" />En cours</span>
-    if (statut === 'COMPLET') return <span className="px-3 py-1 rounded-full text-xs font-medium flex items-center" style={{ background: '#ECFDF5', color: '#16A34A' }}><Circle size={12} className="mr-2" />Terminé</span>
-    return <span className="px-3 py-1 rounded-full text-xs font-medium flex items-center" style={{ background: '#FFF1F1', color: '#E30613' }}><Circle size={12} className="mr-2" />Refusé</span>
+    const base = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm ring-1 ring-inset'
+
+    if (statut === 'NOUVEAU') return (
+      <span role="status" aria-label="Nouveau" title="Nouveau" className={`${base} bg-orange-50 text-orange-700 ring-orange-100 hover:scale-105 transition-transform`}> 
+        <Circle size={12} className="mr-2" />Nouveau
+      </span>
+    )
+
+    if (statut === 'EN_COURS') return (
+      <span role="status" aria-label="En cours" title="En cours" className={`${base} bg-blue-50 text-blue-800 ring-blue-100 hover:scale-105 transition-transform`}> 
+        <Clock size={12} className="mr-2" />En cours
+      </span>
+    )
+
+    if (statut === 'COMPLET') return (
+      <span role="status" aria-label="Terminé" title="Terminé" className={`${base} bg-emerald-50 text-emerald-700 ring-emerald-100 hover:scale-105 transition-transform`}> 
+        <CheckCircle size={12} className="mr-2" />Terminé
+      </span>
+    )
+
+    return (
+      <span role="status" aria-label="Refusé" title="Refusé" className={`${base} bg-red-50 text-red-700 ring-red-100 hover:scale-105 transition-transform`}> 
+        <XCircle size={12} className="mr-2" />Refusé
+      </span>
+    )
   }
 
   return (
