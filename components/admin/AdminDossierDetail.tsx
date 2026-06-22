@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import DocumentList from './DocumentList'
 import { CheckCircle, XCircle } from 'lucide-react'
 import StatusSelector from './StatusSelector'
-import Timeline from './Timeline'
 import { supabase } from '@/lib/supabase'
 
 type Dossier = {
@@ -51,46 +50,50 @@ export default function AdminDossierDetail({ id }: { id: string }) {
 
   return (
     <div className="w-full">
-      <h2 className="text-lg font-semibold text-[#173B8C] mb-3">Dossier {dossier.numero_dossier}</h2>
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h2 className="text-xl font-semibold text-[#173B8C]">Dossier {dossier.numero_dossier}</h2>
+          <div className="text-sm text-gray-600">{dossier.nom} {dossier.prenom} — {dossier.email || '-'}</div>
+        </div>
+        <div className="flex items-center gap-3">
+          <a href={`mailto:${dossier.email}`} className="inline-flex items-center px-3 py-2 bg-gray-50 border rounded text-sm">Envoyer email</a>
+          <a href={dossier.stripe_payment_id ? `https://dashboard.stripe.com/payments/${dossier.stripe_payment_id}` : '#'} target="_blank" rel="noreferrer" className="inline-flex items-center px-3 py-2 bg-[#173B8C] text-white rounded text-sm">Voir paiement</a>
+        </div>
+      </div>
 
-      <div className="space-y-4">
-        <div className="bg-white border rounded p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Informations client</h3>
-          <div className="text-sm text-gray-800 font-medium">{dossier.nom} {dossier.prenom}</div>
-          <div className="text-sm text-gray-600">{dossier.email}</div>
-          <div className="text-sm text-gray-600">{dossier.telephone}</div>
-          <div className="text-sm text-gray-600">Pays permis: {dossier.pays_permis}</div>
-          <div className="text-sm text-gray-500 mt-2">Créé le: {dossier.created_at ? new Date(dossier.created_at).toLocaleString() : '-'}</div>
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="md:col-span-2 space-y-4">
+          <div className="bg-white border rounded p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Informations client</h3>
+            <div className="text-sm text-gray-800 font-medium">{dossier.nom} {dossier.prenom}</div>
+            <div className="text-sm text-gray-600">{dossier.email}</div>
+            <div className="text-sm text-gray-600">{dossier.telephone}</div>
+            <div className="text-sm text-gray-600">Pays permis: {dossier.pays_permis}</div>
+            <div className="text-sm text-gray-500 mt-2">Créé le: {dossier.created_at ? new Date(dossier.created_at).toLocaleString() : '-'}</div>
+          </div>
+
+          <div className="bg-white border rounded p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Documents</h3>
+            <DocumentList numero={dossier.numero_dossier} />
+          </div>
+
+          
         </div>
 
-        <div className="bg-white border rounded p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Paiement</h3>
-          <div className="text-sm">Montant: <strong>{dossier.montant ?? 49}€</strong></div>
-          <div className="text-sm my-2">Statut: {dossier.paiement_effectue ? <span className="text-[#16A34A] font-semibold flex items-center gap-2"><CheckCircle size={16}/>Payé</span> : <span className="text-[#E30613] font-semibold flex items-center gap-2"><XCircle size={16}/>Non payé</span>}</div>
-          <div className="text-sm text-gray-600">Date paiement: {dossier.date_paiement || '-'}</div>
-          <div className="text-sm text-gray-600">Payment ID: {dossier.stripe_payment_id || '-'}</div>
-          <div className="text-sm text-gray-600">Session ID: {dossier.stripe_session_id || '-'}</div>
-          {dossier.stripe_payment_id && (
-            <div className="mt-3">
-              <a href={`https://dashboard.stripe.com/payments/${dossier.stripe_payment_id}`} target="_blank" rel="noreferrer" className="inline-block bg-[#173B8C] text-white px-3 py-2 rounded">Voir sur Stripe</a>
-            </div>
-          )}
-        </div>
+        <aside className="space-y-4">
+          <div className="bg-gradient-to-br from-white via-slate-50 to-slate-50 border rounded-lg p-4 shadow-sm">
+            <h4 className="text-sm font-semibold text-gray-700">Paiement</h4>
+            <div className="mt-2 text-sm">Montant: <strong className="text-gray-900">{dossier.montant ?? 49}€</strong></div>
+            <div className="mt-2 text-sm">Statut: {dossier.paiement_effectue ? <span className="text-[#16A34A] font-semibold flex items-center gap-2"><CheckCircle size={14}/>Payé</span> : <span className="text-[#E30613] font-semibold flex items-center gap-2"><XCircle size={14}/>Non payé</span>}</div>
+            <div className="text-sm text-gray-600 mt-2">Date: {dossier.date_paiement || '-'}</div>
+            <div className="text-sm text-gray-600">ID: {dossier.stripe_payment_id || '-'}</div>
+          </div>
 
-        <div className="bg-white border rounded p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Statut dossier</h3>
-          <StatusSelector currentStatus={dossier.statut} dossierId={dossier.id} />
-        </div>
-
-        <div className="bg-white border rounded p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Documents</h3>
-          <DocumentList numero={dossier.numero_dossier} />
-        </div>
-
-        <div className="bg-white border rounded p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Historique</h3>
-          <Timeline />
-        </div>
+          <div className="bg-white border rounded p-4">
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">Statut dossier</h4>
+            <StatusSelector currentStatus={dossier.statut} dossierId={dossier.id} />
+          </div>
+        </aside>
       </div>
     </div>
   )

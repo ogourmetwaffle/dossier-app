@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import AdminDossierRow from './AdminDossierRow'
+import AdminDossierDetail from './AdminDossierDetail'
+import Modal from './Modal'
 import { supabase } from '@/lib/supabase'
 
 type Dossier = {
@@ -53,6 +55,15 @@ export default function AdminDossierList({ dossiers: propDossiers, selectedId, o
   const start = (page - 1) * pageSize
   const paginated = filtered.slice(start, start + pageSize)
 
+  const [localSelectedId, setLocalSelectedId] = useState<string | null>(selectedId ?? null)
+
+  const handleOpen = (id: string) => {
+    if (onSelect) return onSelect(id)
+    setLocalSelectedId(id)
+  }
+
+  const handleClose = () => setLocalSelectedId(null)
+
   // reset to first page when filters change
   React.useEffect(() => {
     setPage(1)
@@ -90,7 +101,7 @@ export default function AdminDossierList({ dossiers: propDossiers, selectedId, o
         <div>
           {loading && <div className="p-4 text-sm text-gray-500">Chargement...</div>}
           {!loading && paginated.map((d) => (
-            <AdminDossierRow key={d.id} dossier={d} onOpen={onSelect} selectedId={selectedId} />
+            <AdminDossierRow key={d.id} dossier={d} onOpen={handleOpen} selectedId={selectedId ?? localSelectedId ?? undefined} />
           ))}
           {!loading && filtered.length === 0 && <div className="p-4 text-sm text-gray-500">Aucun dossier trouvé.</div>}
         </div>
@@ -116,6 +127,11 @@ export default function AdminDossierList({ dossiers: propDossiers, selectedId, o
           </div>
         </div>
       </div>
+      {localSelectedId && (
+        <Modal open={true} onClose={handleClose} title={`Détails dossier`}>
+          <AdminDossierDetail id={localSelectedId} />
+        </Modal>
+      )}
     </div>
   )
 }
