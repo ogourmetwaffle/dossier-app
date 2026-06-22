@@ -28,7 +28,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone?:
 export default function AdminPanel() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [dossiers, setDossiers] = useState<any[]>([])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function AdminPanel() {
                       <button onClick={() => setShowModal(false)} className="text-gray-600 hover:text-gray-900">Fermer</button>
                     </div>
                     <div className="p-4">
-                      <AdminDossierDetail id={selectedId} />
+                      <AdminDossierDetail id={selectedId!} />
                     </div>
                   </div>
                 </div>

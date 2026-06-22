@@ -18,7 +18,6 @@ type Dossier = {
 export default function AdminDossierRow({ dossier, onOpen, selectedId }: { dossier: Dossier; onOpen?: (id: string) => void; selectedId?: string }) {
   const { id, numero_dossier, nom, prenom, pays_permis, paiement_effectue, statut, created_at } = dossier
   const gridStyle = { gridTemplateColumns: '220px 1fr 120px 110px 120px 120px 80px' }
-  const isSelected = selectedId === id
 
   const badge = () => {
     const base = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm ring-1 ring-inset'
@@ -49,7 +48,7 @@ export default function AdminDossierRow({ dossier, onOpen, selectedId }: { dossi
   }
 
   return (
-    <div className={`grid items-center px-3 py-3 hover:bg-gray-50 ${isSelected ? 'bg-gray-100' : ''}`} style={gridStyle}>
+    <div className={`grid items-center px-3 py-3 hover:bg-gray-50`} style={gridStyle}>
       <div className="text-sm text-gray-700">{numero_dossier}</div>
       <div className="text-sm text-gray-800 truncate">{nom} {prenom}</div>
       <div className="text-sm text-gray-700">{pays_permis}</div>

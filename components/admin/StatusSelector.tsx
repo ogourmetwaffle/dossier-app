@@ -25,7 +25,7 @@ export default function StatusSelector({ currentStatus, dossierId }: { currentSt
       }
     } catch (err) {
       console.error(err)
-      setMessage('Erreur réseau')
+      toast.error('Erreur réseau')
     }
     setLoading(false)
     // no local message; using toast for feedback
